@@ -8,7 +8,6 @@ var app = require('http').createServer(handler)
 app.listen(9090);
 
 var window=null
-
 function handler (req, res) {
   fs.readFile(__dirname + '/index.html',
   function (err, data) {
