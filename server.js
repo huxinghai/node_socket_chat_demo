@@ -1,6 +1,4 @@
 var app = require('http').createServer(handler)
-
-
   , io = require('socket.io').listen(app)
   , mc=require("./memcache").Client
   , fs = require('fs')
