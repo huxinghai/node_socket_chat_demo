@@ -1,0 +1,119 @@
+<html>
+  <head>
+     <title></title>
+    <script src="/socket.io/socket.io.js" ></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.min.js"></script>
+    <script>
+      var socket = io.connect("http://localhost");
+
+      function get_Message(user_id)
+      {
+        socket.on(user_id,function(data){
+          //$("messages").append("<li>"+ data.messages +"</li>")
+          add_Message(data);
+        })
+      }
+
+      socket.on("get",function(data){
+        console.log(data);
+      })
+      socket.on("set",function(data){
+        console.log(data);
+      })
+
+      function add_Message(data,current)
+      {
+        var msg=document.getElementById("messages");
+        var li=document.createElement("li");
+        var str=data.messages;
+        if(current)
+        {
+           str="<span class='message'>"+ data.messages +"</span>"
+        }
+        li.innerHTML=str+"<span class='date'>"+ new Date() +"</span>";
+        msg.appendChild(li)
+        //alert(data.messages);
+        console.log(data);
+      }
+      function connection()
+      {
+         var _user_id=document.getElementById("user_id").value;
+          if(_user_id=="")
+          {
+             alert("请输入用户名");
+             return;
+          }
+          var _send_user_id=document.getElementById("send_user_id").value;
+          if(_send_user_id=="")
+          {
+            alert("请输入发送用户");
+             return;
+          }
+
+          get_Message(_user_id);
+          socket.emit("user",{user:_user_id,send_user:_send_user_id});
+
+      }
+
+      function set_Message()
+      {
+          var _user_id=document.getElementById("user_id").value;
+          if(_user_id=="")
+          {
+             alert("请输入用户名!");
+             return;
+          }
+          var _send_user_id=document.getElementById("send_user_id").value;
+          if(_send_user_id=="")
+          {
+             alert("请输入发送用户!");
+             return;
+          }
+          var _message=document.getElementById("send_message").value;
+
+          socket.emit(_user_id,{user_send:_send_user_id,messages:_message});
+          add_Message({messages:_message},true);
+      }
+
+
+    </script>
+    <style>
+       ul#messages{
+          list-style:none;
+          padding:0px;
+          width:500px;
+          height:400px;
+          border:1px solid gray;
+          overflow:auto;
+          font-size:12px;
+       }
+
+       ul#messages li{
+          margin: 2px 5px;
+          padding: 0;
+       }
+
+       ul#messages li .date{
+          float: right;
+          color: #777;
+          font-size: 11px;
+          padding-left: 4px;
+          padding-top: 2px;
+       }
+
+       ul#messages li .message{
+        color:red;
+       }
+    </style>
+    <!--<script type='text/javascript' src='jquery-1.6.2.js' ></script>-->
+  </head>
+  <body>
+    user:<input type='text' id='user_id'  /><br />
+    send_user:<input type='text' id='send_user_id'  /><input type='button' onclick='connection();' value='connection' /><br />
+
+    <ul id='messages'>
+    </ul>
+    <input type='text' id='send_message'  /><input type='button' value='send' onclick='set_Message();' />
+  </body>
+</html>
+
