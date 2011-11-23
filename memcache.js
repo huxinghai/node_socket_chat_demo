@@ -48,7 +48,6 @@ Client.prototype.connect = function () {
 	if (!this.conn) {
 
 	    this.conn = new tcp.createConnection(this.port, this.host);
-      sys.puts(this.conn);
 		  var self = this;
 	    this.conn.addListener("connect", function () {
 	        this.setTimeout(0);          // try to stay connected.

@@ -1,66 +1,18 @@
-var app = require("./fu")
-  , io = require('socket.io').listen(app)
-  , mc=require("./memcache").Client
-  , sys=require('sys')
-  , db =require("./mysql");
+var  fu=require("./fu")
+   , m=require("./LogicMemcache")
+   , sys=require('sys')
+   , db =require("./mysql");
 
 
-app.runServer();
-/**
-function handler (req, res) {
-  response_client(req, res)
-}
-
-function response_client(req, res)
-{
-  sys.puts(req.url+"|method:"+req.method);
-  if(req.method === "GET" || req.method === "HEAD")
-  {
-    var path =url.parse(req.url).pathname
-    var type="",file=path
-    if(path=="/jquery-1.6.2.js")
-    {
-      type="application/javascript";
-
-    }else if(path=="/")
-    {
-      type="text/html"
-      file="/index.html"
-    }
-
-    if(type==""){return;}
-
-    sys.puts(path);
-    fs.readFile(__dirname +file ,function(err,data){
-      if(err)
-      {
-         res.writeHead(500);
-         return res.end('Error'+path);
-      }
-
-      headers = { "Content-Type": type
-          , "Content-Length": data.length
-          };
-      res.writeHead(200,headers);
-      res.end(data);
-    })
-  }
-}
-**/
-var m=new mc(11211,'localhost');
-m.connect()
-
-
-io.sockets.on('connection', function (socket) {
+fu.io.sockets.on('connection', function (socket) {
   //连接
   socket.on("connect",function(data){
       var user_key=data.user;
 
-      get_user_by_key(data.user,function(data){
+      m.get_user_by_key(data.user,function(data){
           eval("var u="+data)
 
           var user=u.user;
-          console.log(user);
           if(user==null || user==undefined)
           {
             socket.emit("error",{error_stats:false,error_msg:"没有用户信息，请核对..."});
@@ -134,7 +86,7 @@ io.sockets.on('connection', function (socket) {
 
   //断开连接
   socket.on('disconnect', function () {
-     get_user_by_key(socket.name,function(data){
+     m.get_user_by_key(socket.name,function(data){
          if(data!=null && data!=undefined)
          {
               eval("var u="+data);
@@ -149,9 +101,6 @@ io.sockets.on('connection', function (socket) {
   })
 });
 
-io.sockets.on("close",function(){
-   console.log("close-------------------------");
-})
 
 //将发送信息保存
 function add_messages(data,socket)
@@ -183,13 +132,7 @@ function add_messages(data,socket)
     db.existfirends(data,addCallback);
 }
 
-//根据key获取用户信息
-function get_user_by_key(key,fn)
-{
-  console.log("key:"+key);
 
-   m.get(key,fn)
-}
 
 //通知上线与下线用户
 //user 登陆对象
@@ -203,7 +146,7 @@ function notice_user(user,socket)
             {
                 if(results[i].is_online=='true' && results[i].memache_key != user.key)
                 {
-                    io.sockets.socket(results[i].socket_id).emit("alluser",[user]);
+                    fu.io.sockets.socket(results[i].socket_id).emit("alluser",[user]);
                 }
             }
 
@@ -268,19 +211,5 @@ function update_state(results)
 function Get_Message(user,callback)
 {
     db.queryMsg({user_id:user.id},callback);
-}
-
-//获取聊天记录
-function get_Message_by_id(id,sid)
-{
-    var Mg=[];
-    for(var i=0;i<MSG.length;i++)
-    {
-      if((MSG[i].id==id && MSG[i].sid==sid) || (MSG[i].id==sid && MSG[i].sid==id)) //自己的这个人的聊天信息
-      {
-        Mg.push(MSG[i]);
-      }
-    }
-    return Mg;
 }
 

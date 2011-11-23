@@ -1,17 +1,20 @@
-var   path=require("path")
+var app = require('http').createServer(handlerRequest)
     , fs=require("fs")
     , url=require("url")
-    , app = require('http').createServer(handlerRequest)
+    , path=require("path")
+    , io = require('socket.io').listen(app)
     , part=9090
     , host="192.168.2.126"
 
-exports.runServer=function()
-{
-    app.listen(part,host);
-    console.log("http://"+host+":"+part)
-}
+
+exports.io=io
+
+
+app.listen(part,host);
+console.log("http://"+host+":"+part)
+
 //请求回调函数
-var handlerRequest=function(req,res)
+function handlerRequest(req,res)
 {
      //如果route没有匹配到，则当作静态文件处理
      staticFileServer(req, res);
@@ -21,8 +24,11 @@ var handlerRequest=function(req,res)
 //静态文件处理
 var staticFileServer=function(req,res)
 {
+    var filename=url.parse(req.url).pathname;
+    filename=filename=="/" ? "index.html":filename;
+
     //判断如果没有路径，合并一个路径
-    var filePath = path.join(__dirname,url.parse(req.url).pathname);
+    var filePath = path.join(__dirname,filename);
 
     //判断路径是否存在
     path.exists(filePath, function(exists) {
