@@ -1,59 +1,94 @@
 <html>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <head>
      <title></title>
     <script src="/socket.io/socket.io.js" ></script>
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.min.js"></script>
+    <script type="text/javascript" src="jquery-1.6.2.js"></script>
     <script>
-      var socket = io.connect("http://localhost");
+      var socket = io.connect("http://192.168.2.126:9090");
+
+      var options={
+        error_stats:true, //错误状态
+        error_msg:""
+      }
 
       function get_Message(user_id)
       {
         socket.on(user_id,function(data){
-          //$("messages").append("<li>"+ data.messages +"</li>")
           add_Message(data);
         })
       }
 
-      socket.on("get",function(data){
-        console.log(data);
-      })
-      socket.on("set",function(data){
-        console.log(data);
-      })
+      function getAlluser()
+      {
+        socket.on("alluser",function(data){  //所有用户
+				   console.log(data);
+           if(data!=null && data!=undefined)
+           {
+              var _tr=""
+              for(var i=0;i<data.length;i++)
+              {
+                  if(data[i].key!=$("#user_id").val())
+                   {
+                       _tr+="<tr><td>"+ data[i].key +"</td><td>"+ data[i].id +"</td><td>"+ data[i].login +"</td></tr>"
+                   }
+              }
+
+              $("#login_user tbody").html(_tr);
+           }
+        })
+      }
 
       function add_Message(data,current)
       {
         var msg=document.getElementById("messages");
-        var li=document.createElement("li");
-        var str=data.messages;
-        if(current)
+
+        for(var i=0;i<data.length;i++)
         {
-           str="<span class='message'>"+ data.messages +"</span>"
+            var li=document.createElement("li");
+            var str=data[i].messages;
+            if(current)
+            {
+               str="<span class='message'>"+ data[i].messages +"</span>"
+            }
+            li.innerHTML="<b>"+ data[i].user +":</b>"+str+"<span class='date'>"+ new Date() +"</span>";
+            msg.appendChild(li)
+            //alert(data.messages);
+            console.log(data[i]);
         }
-        li.innerHTML=str+"<span class='date'>"+ new Date() +"</span>";
-        msg.appendChild(li)
-        //alert(data.messages);
-        console.log(data);
       }
-      function connection()
+
+      function login()
       {
-         var _user_id=document.getElementById("user_id").value;
-          if(_user_id=="")
+          getAlluser();
+          var _user_id=document.getElementById("user_id").value;
+          socket.emit("connect",{user:_user_id});
+          if(!options.error_stats)
           {
-             alert("请输入用户名");
-             return;
-          }
-          var _send_user_id=document.getElementById("send_user_id").value;
-          if(_send_user_id=="")
-          {
-            alert("请输入发送用户");
-             return;
+            alert(options.error_msg);
+            return;
           }
 
+          socket.on("error",function(data){
+            $.extend(options,data)  //返回错误信息
+          })
           get_Message(_user_id);
-          socket.emit("user",{user:_user_id,send_user:_send_user_id});
 
+          $("#current_user").html(_user_id);
+          $("#divLoing").hide();
+          $("#divMessage").show();
+          $("#login_user").show();
       }
+
+      $(document).ready(function(){
+        $("#login_user tbody").dblclick(function(event){
+             console.log(event);
+             var _send_user_id=$("td:first",event.target.parentNode).html();
+             var _user_id=$("#user_id").val();
+             socket.emit("user",{user:_user_id,user_send:_send_user_id});
+             $(".user_message").html(_send_user_id);
+        })
+      })
 
       function set_Message()
       {
@@ -63,7 +98,7 @@
              alert("请输入用户名!");
              return;
           }
-          var _send_user_id=document.getElementById("send_user_id").value;
+          var _send_user_id=$(".user_message").html();
           if(_send_user_id=="")
           {
              alert("请输入发送用户!");
@@ -71,18 +106,21 @@
           }
           var _message=document.getElementById("send_message").value;
 
-          socket.emit(_user_id,{user_send:_send_user_id,messages:_message});
-          add_Message({messages:_message},true);
+          socket.emit(_user_id,{user:_user_id,user_send:_send_user_id,messages:_message});
+          add_Message([{user:_user_id,messages:_message}],true);
+          $("#send_message").val('');
       }
 
+      window.onbeforeunload=function(){
 
+      }
     </script>
     <style>
        ul#messages{
           list-style:none;
           padding:0px;
           width:500px;
-          height:400px;
+          height:300px;
           border:1px solid gray;
           overflow:auto;
           font-size:12px;
@@ -108,12 +146,27 @@
     <!--<script type='text/javascript' src='jquery-1.6.2.js' ></script>-->
   </head>
   <body>
-    user:<input type='text' id='user_id'  /><br />
-    send_user:<input type='text' id='send_user_id'  /><input type='button' onclick='connection();' value='connection' /><br />
-
-    <ul id='messages'>
-    </ul>
-    <input type='text' id='send_message'  /><input type='button' value='send' onclick='set_Message();' />
+    <div id="divLoing">
+      user:<input type='text' id='user_id'  /><input type='button' onclick='login();' value='login' /><br />
+      <!--send_user:<input type='text' id='send_user_id'  /><input type='button' onclick='connection();' value='connection' /><br />-->
+    </div>
+    <table id='login_user' style='border:1xp solid gray;display:none'>
+      <thead>
+        <tr>
+          <th>key</th>
+          <th>id</th>
+          <th>login</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+		</table> <br/>
+    <div id="divMessage" style='display:none'>
+      姓名：<span style='color:red;' id='current_user'></span>
+      <ul id='messages'>
+      </ul>
+      <span class='user_message'></span><input type='text' id='send_message'  />:<input type='button' value='send' onclick='set_Message();' />
+    </div>
   </body>
 </html>
 
