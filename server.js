@@ -9,23 +9,26 @@ fu.io.sockets.on('connection', function (socket) {
   socket.on("connect",function(data){
       var user_key=data.user;
 
-      m.get_user_by_key(data.user,function(data){
+      //获取memcached key 值
+      m.get_user_by_key(data.user,function(err,data){
+          console.log(data)
           eval("var u="+data)
 
           var user=u.user;
           if(user==null || user==undefined)
           {
-            socket.emit("error",{error_stats:false,error_msg:"没有用户信息，请核对..."});
+            errMessage("error","没有用户信息，请核对...");
             return;
           }
 
+          //函数
           var isOnLineUser=function(err, results, fields)
           {
               if(!err)
               {
                   if(results.length>0)
                   {
-                      socket.emit("error",{error_stats:false,error_msg:"用户已经登陆了，不能重复登陆!，请核对..."});
+                      errMessage("error","用户已经登陆了，不能重复登陆!，请核对...");
                       return;
                   }
               }
@@ -54,9 +57,11 @@ fu.io.sockets.on('connection', function (socket) {
               }
               else
               {
-                  socket.emit("error",{error_stats:false,error_msg:"显示没有在线的信息出错!"+err});
+                  errMessage("notice","显示没有在线的信息出错!"+err);
               }
           });
+
+          m.getOnlineUserAll();
 
           notice_user(user,socket);  //告诉其它用户
       });
@@ -86,7 +91,9 @@ fu.io.sockets.on('connection', function (socket) {
 
   //断开连接
   socket.on('disconnect', function () {
-     m.get_user_by_key(socket.name,function(data){
+     if(socket.name==undefined){return;}
+     //获取memached key的信息
+     m.get_user_by_key(socket.name,function(err,data){
          if(data!=null && data!=undefined)
          {
               eval("var u="+data);
@@ -94,13 +101,24 @@ fu.io.sockets.on('connection', function (socket) {
 
               user["is_online"]="false"
               db.update_offline(user.id)
+
               notice_user(user,socket);        //告诉其它用户
+
+             //删除memached的key
+             m.deleteMemcacheBykey(socket.name,function(err,data){
+                  console.log(data);
+             });
          }
      })
-     console.log("key:"+socket.name+" connection close ----->");
+     console.log("--key:"+socket.name+" connection close ----->");
   })
 });
 
+//错误与提示信息
+function errMessage(_type,_messages,socket)
+{
+    socket.emit({type:_type,messages:_messages});
+}
 
 //将发送信息保存
 function add_messages(data,socket)
