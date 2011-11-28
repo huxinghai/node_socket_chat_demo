@@ -1,0 +1,51 @@
+!SESSION 2011-11-13 12:36:30.416 -----------------------------------------------
+eclipse.buildId=M20100211-1343
+java.version=1.6.0_20
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=zh_CN
+Command-line arguments:  -os linux -ws gtk -arch x86_64
+
+!ENTRY org.eclipse.equinox.p2.ui 4 0 2011-11-13 12:38:29.697
+!MESSAGE Operation details
+!SUBENTRY 1 org.eclipse.equinox.p2.director 4 1 2011-11-13 12:38:29.697
+!MESSAGE Cannot complete the install because one or more required items could not be found.
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:29.697
+!MESSAGE Software being installed: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405)
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:29.697
+!MESSAGE Missing requirement: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405) requires 'org.eclipse.wst.jsdt.feature.feature.group [1.2.0,2.0.0)' but it could not be found
+
+!ENTRY org.eclipse.equinox.p2.ui 4 0 2011-11-13 12:38:29.697
+!MESSAGE Operation details
+!SUBENTRY 1 org.eclipse.equinox.p2.director 4 1 2011-11-13 12:38:29.697
+!MESSAGE Cannot complete the install because one or more required items could not be found.
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:29.697
+!MESSAGE Software being installed: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405)
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:29.697
+!MESSAGE Missing requirement: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405) requires 'org.eclipse.wst.jsdt.feature.feature.group [1.2.0,2.0.0)' but it could not be found
+
+!ENTRY org.eclipse.equinox.p2.ui 4 0 2011-11-13 12:38:29.700
+!MESSAGE Operation details
+!SUBENTRY 1 org.eclipse.equinox.p2.director 4 1 2011-11-13 12:38:29.700
+!MESSAGE Cannot complete the install because one or more required items could not be found.
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:29.700
+!MESSAGE Software being installed: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405)
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:29.700
+!MESSAGE Missing requirement: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405) requires 'org.eclipse.wst.jsdt.feature.feature.group [1.2.0,2.0.0)' but it could not be found
+
+!ENTRY org.eclipse.equinox.p2.ui 4 0 2011-11-13 12:38:29.727
+!MESSAGE Operation details
+!SUBENTRY 1 org.eclipse.equinox.p2.director 4 1 2011-11-13 12:38:29.727
+!MESSAGE Cannot complete the install because one or more required items could not be found.
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:29.727
+!MESSAGE Software being installed: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405)
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:29.727
+!MESSAGE Missing requirement: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405) requires 'org.eclipse.wst.jsdt.feature.feature.group [1.2.0,2.0.0)' but it could not be found
+
+!ENTRY org.eclipse.equinox.p2.ui 4 0 2011-11-13 12:38:36.463
+!MESSAGE Operation details
+!SUBENTRY 1 org.eclipse.equinox.p2.director 4 1 2011-11-13 12:38:36.464
+!MESSAGE Cannot complete the install because one or more required items could not be found.
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:36.464
+!MESSAGE Software being installed: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405)
+!SUBENTRY 2 org.eclipse.equinox.p2.director 4 0 2011-11-13 12:38:36.464
+!MESSAGE Missing requirement: Chromium JavaScript Debugger Bridge to JSDT 0.3.0.201108190405 (org.chromium.debug.jsdtbridge.feature.group 0.3.0.201108190405) requires 'org.eclipse.wst.jsdt.feature.feature.group [1.2.0,2.0.0)' but it could not be found
