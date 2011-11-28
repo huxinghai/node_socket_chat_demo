@@ -11,6 +11,7 @@ exports.io=io
 
 
 app.listen(part,host);
+
 console.log("http://"+host+":"+part)
 
 //请求回调函数
@@ -19,7 +20,6 @@ function handlerRequest(req,res)
      //如果route没有匹配到，则当作静态文件处理
      staticFileServer(req, res);
 }
-
 
 //静态文件处理
 var staticFileServer=function(req,res)

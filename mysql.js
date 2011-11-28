@@ -25,12 +25,9 @@ exports.queryMsg=function(u,callback)
     var wh="";
     if(u.suser_id!=null && u.suser_id!=undefined)
     {
-        wh=" and a.suser_id="+u.suser_id;
+        wh=" and suser_id="+u.suser_id;
     }
-    query("select a.*,b.memache_key,c.memache_key as smemache_key from messages as a "+
-              "left join users as b on a.user_id=b.id "+
-              "left join users as c on a.suser_id=c.id "+
-           "where a.state='false' and b.is_online='true' and a.user_id="+u.user_id + wh,callback);
+    query("select *from messages where state='false' and user_id="+u.user_id + wh,callback);
 }
 
 
@@ -53,9 +50,9 @@ exports.update_online=function(user)
 //标识用记下线
 exports.update_offline=function(user_id)
 {
-    var query=client.query("UPDATE users set is_online='false',memache_key='',socket_id='' where id=?",[user_id]);
+   /** var query=client.query("UPDATE users set is_online='false',memache_key='',socket_id='' where id=?",[user_id]);
 
-    return query;
+    return query;**/
 }
 
 //激请加好友
@@ -69,7 +66,7 @@ exports.add_friends=function(fr)
 //查询好友
 exports.query_friends=function(user_id,callback)
 {
-    query("select a.zuser_id,a.user_id,b.id,b.login,b.is_online,memache_key,b.socket_id from friends as a "+
+    query("select a.zuser_id,a.user_id,b.id,b.login from friends as a "+
           "left join users as b on a.zuser_id=b.id where a.user_id="+user_id,callback);
 }
 
@@ -81,9 +78,9 @@ exports.existfirends=function(user,callback)
 }
 
 //判断是否在存
-exports.existUserIdOnline=function(user_id,callback)
+exports.existUserId=function(user_id,callback)
 {
-    query("select *from users where is_online='true' and id="+user_id,callback);
+    query("select *from users where id="+user_id,callback);
 };
 
 //标识阅读
