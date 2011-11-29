@@ -13,6 +13,11 @@ var query=function(sql,fn)
     client.query(sql,fn);
 };
 
+exports.queryUser=function(sh,callback)
+{
+    query("select *from users where login like '%"+sh.login+"%' and id<>"+ sh.id +" and not id in (select zuser_id from friends where user_id="+ sh.id +")",callback);
+}
+
 //查询历史信息
 exports.queryhistry=function(user_id,suser_id,callback_fn)
 {
@@ -32,11 +37,19 @@ exports.queryMsg=function(u,callback)
 
 
 //添加
-exports.insert=function(msg)
+exports.insertMessage=function(msg)
 {
-    var query=client.query("INSERT INTO messages set suser_id=?,user_id=?,messages=?,slogin=?,login=?,create_date=?,state=?",   [msg.suser_id,msg.user_id,msg.messages,msg.slogin,msg.login,msg.create_date,msg.state]);
+    var query=client.query("INSERT INTO messages set suser_id=?,user_id=?,messages=?,create_date=?,state=?",   [msg.suser_id,msg.user_id,msg.messages,new Date(),'false']);
 
     return query;
+}
+
+//通知好友
+exports.noticeFriends=function(user_id,callback)
+{
+    query("select a.*,b.login,c.login as slogin from messages as a"+
+          " left join users as b on a.user_id=b.id "+
+          " left join users as c on a.suser_id=c.id where state='false' and a.user_id="+user_id,callback);
 }
 
 //标识用户上线
@@ -47,13 +60,7 @@ exports.update_online=function(user)
     return query;
 }
 
-//标识用记下线
-exports.update_offline=function(user_id)
-{
-   /** var query=client.query("UPDATE users set is_online='false',memache_key='',socket_id='' where id=?",[user_id]);
 
-    return query;**/
-}
 
 //激请加好友
 exports.add_friends=function(fr)
@@ -61,6 +68,13 @@ exports.add_friends=function(fr)
     var query=client.query("INSERT INTO friends set user_id=?,zuser_id=?",[fr.user_id,fr.zuser_id]);
 
     return query;
+}
+
+//查询用户的好友
+exports.queryFriendsFirst=function(data,callback)
+{
+        query("select a.zuser_id,a.user_id as id,a.user_id,b.login from friends as a "+
+          "left join users as b on a.zuser_id=b.id where a.user_id="+data.user_id+" and a.zuser_id='"+data.zuser_id+"'",callback);
 }
 
 //查询好友
@@ -84,7 +98,7 @@ exports.existUserId=function(user_id,callback)
 };
 
 //标识阅读
-exports.update=function(ids)
+exports.updateMessage=function(ids)
 {
     var query=client.query("UPDATE messages set state='true' where id in (?)",[ids]);
 

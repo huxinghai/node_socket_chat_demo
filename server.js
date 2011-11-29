@@ -31,6 +31,26 @@ fu.io.sockets.on('connection', function (socket) {
       bll.closeSocket(socket.name);
   })
 
+  //搜索好友
+  socket.on('search_friends',function(data){
+      bll.searchFriends(data);
+  })
+
+  //邀请好友通知信息
+  socket.on('noticeFriends',function(data){
+      bll.nFriends(data)
+  })
+
+  //同意好友
+  socket.on("argeeFriends",function(data){
+      var info=[{user_id:data.user_id,zuser_id:data.zuser_id},
+                {zuser_id:data.user_id,user_id:data.zuser_id}]
+      for(var i=0;i<info.length;i++)
+      {
+          bll.argeeFriends(info[i]);
+      }
+  })
+
     //错误与提示信息
   var errMessage=function(_type,_messages,socket_id)
   {

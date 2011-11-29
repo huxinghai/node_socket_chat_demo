@@ -28,7 +28,8 @@ var incr=function(key,fn)
 }
 
 var tb={
-  messages:"messages"
+  messages:"messages",
+  sysMsg:"systemMessages"
 }
 
 // 初始化
@@ -161,8 +162,6 @@ function queryTableIds(tb_name,callback)
             {
                 for(var i=1;i<=ids;i++)
                 {
-                    //console.log(i+"=a="+Date.now());
-                    //setTimeout(callback,10000,i);
                     callback(i,ids);
                 }
             }
@@ -218,7 +217,7 @@ function initMessageId(table_name)
         {
             if(!results)
             {
-                 set(table_name+"Id",0,function(err,results){
+                 set(table_name+"Id","0",function(err,results){
                     console.log(results);
                 })
             }
