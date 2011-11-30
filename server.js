@@ -9,7 +9,7 @@ var  fu=require("./fu")
 m.ClearAll();
 
 fu.io.sockets.on('connection', function (socket) {
-  //连接
+  //连接  //
   socket.on("connect",function(data){
       bll.connection(data);
   });
