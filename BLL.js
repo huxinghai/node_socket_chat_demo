@@ -66,7 +66,7 @@ exports.bll=function(m,db,socket,fu,errfn,redis)
         {
             if(results.length>0)
             {
-                socket.emit("msg_hist",results);
+                socket.emit("msg_hist",{data:results,type:"Messages"});
             }
         };
 
