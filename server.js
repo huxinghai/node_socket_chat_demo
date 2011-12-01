@@ -43,8 +43,10 @@ fu.io.sockets.on('connection', function (socket) {
 
   //同意好友
   socket.on("argeeFriends",function(data){
+      //两个用户添加好友信息
       var info=[{user_id:data.user_id,zuser_id:data.zuser_id},
                 {zuser_id:data.user_id,user_id:data.zuser_id}]
+
       for(var i=0;i<info.length;i++)
       {
           bll.argeeFriends(info[i]);
