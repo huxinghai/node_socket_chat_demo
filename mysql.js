@@ -19,10 +19,10 @@ exports.queryUser=function(sh,callback)
 }
 
 //查询历史信息
-exports.queryhistry=function(user_id,suser_id,callback_fn)
+/**exports.queryhistry=function(user_id,suser_id,callback_fn)
 {
     query("select *from messages where state='true' and ((suser_id="+ user_id +" and user_id="+ suser_id +") or (suser_id="+ suser_id +" and user_id="+ user_id +")) ",callback_fn);
-};
+};**/
 
 //查询发送的信息
 exports.queryMsg=function(u,callback)

@@ -3,7 +3,7 @@ var redis=require("redis")
 client.select(1);
 
 
-client.auth("huxinghai");
+//client.auth("huxinghai");
 //exports.
 
 var set=function(key,value,fn)
