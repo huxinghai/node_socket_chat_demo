@@ -28,8 +28,7 @@ var incr=function(key,fn)
 }
 
 var tb={
-  messages:"messages",
-  sysMsg:"systemMessages"
+  messages:"messages"
 }
 
 // 初始化

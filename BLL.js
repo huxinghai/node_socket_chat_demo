@@ -1,5 +1,12 @@
+var   db =require("./mysql")
+    , m=require("./BLLMemcache")
+    , redis=require("./redis");
+
+//清除上次的memcache
+m.ClearAll();
+
 //功能逻辑
-exports.bll=function(m,db,socket,fu,errfn,redis)
+exports.bll=function(socket,fu)
 {
     this.connection=function(data)
     {
@@ -130,7 +137,7 @@ exports.bll=function(m,db,socket,fu,errfn,redis)
     {
         if(data.user_id==undefined || data.suser_id==undefined)
         {
-            errfn("notice","加入好友非法操作！");
+            errMessage("notice","加入好友非法操作！");
             return;
         }
         db.insertMessage(data);
@@ -168,9 +175,9 @@ exports.bll=function(m,db,socket,fu,errfn,redis)
                                 {
                                     fu.io.sockets.socket(u.socket_id).emit("alluser",[use]);
                                 }
-                                m.queryUserIdOnline(tuser,errfn,callbackOnline);
+                                m.queryUserIdOnline(tuser,errMessage,callbackOnline);
                             }
-                            m.queryUserIdOnline(results,errfn,callbackNotice);
+                            m.queryUserIdOnline(results,errMessage,callbackNotice);
                         }
                     }
                     db.queryFriendsFirst(data,callbackquery);
@@ -197,7 +204,7 @@ exports.bll=function(m,db,socket,fu,errfn,redis)
                         updateSysMessageState(results); //更新状态
                     }
                     //如果用户在线把信息发送给它
-                    m.queryUserIdOnline(users,errfn,callbackMemcached);
+                    m.queryUserIdOnline(users,errMessage,callbackMemcached);
                 }
             }
         }
@@ -240,7 +247,7 @@ exports.bll=function(m,db,socket,fu,errfn,redis)
     var islinUserbyId=function(user)
     {
         //判断是否已经登陆
-        m.queryMemcachedbyKeyifUserId(user,errfn);
+        m.queryMemcachedbyKeyifUserId(user,errMessage);
     };
 
 
@@ -280,7 +287,7 @@ exports.bll=function(m,db,socket,fu,errfn,redis)
                         }
                     }
                     //如果用户在线把信息发送给它
-                    m.queryUserIdOnline(users,errfn,queryKeyMemcached);
+                    m.queryUserIdOnline(users,errMessage,queryKeyMemcached);
                 }
             };
 
@@ -325,7 +332,7 @@ exports.bll=function(m,db,socket,fu,errfn,redis)
 
             if(!err)
             {
-                m.queryUserIdOnline(results,errfn,function(u){
+                m.queryUserIdOnline(results,errMessage,function(u){
                    fu.io.sockets.socket(u.socket_id).emit("alluser",[user]);
                    fu.io.sockets.socket(user.socket_id).emit("alluser",[u]);
                 })
@@ -335,5 +342,16 @@ exports.bll=function(m,db,socket,fu,errfn,redis)
 
         db.query_friends(user.id,callback)
     };
+
+    //错误与提示信息
+    var errMessage=function(_type,_messages,socket_id)
+    {
+        var s=socket
+        if(socket_id)
+        {
+            s=fu.io.sockets.socket(socket_id);
+        }
+        s.emit("error",{type:_type,messages:_messages});
+    }
 }
 

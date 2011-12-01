@@ -1,12 +1,7 @@
 var  fu=require("./fu")
-   , m=require("./BLLMemcache")
    , util=require('util')
-   , db =require("./mysql")
-   , busin=require("./BLL")
-   , redis=require("./redis");
+   , busin=require("./BLL");
 
-//清除上次的memcache
-m.ClearAll();
 
 fu.io.sockets.on('connection', function (socket) {
   //连接  //
@@ -53,17 +48,6 @@ fu.io.sockets.on('connection', function (socket) {
       }
   })
 
-    //错误与提示信息
-  var errMessage=function(_type,_messages,socket_id)
-  {
-      var s=socket
-      if(socket_id)
-      {
-          s=fu.io.sockets.socket(socket_id);
-      }
-      s.emit("error",{type:_type,messages:_messages});
-  }
-
-  var bll=new busin.bll(m,db,socket,fu,errMessage,redis);
+  var bll=new busin.bll(socket,fu);
 });
 
