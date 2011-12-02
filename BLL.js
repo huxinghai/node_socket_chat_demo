@@ -15,7 +15,8 @@ exports.bll=function(socket,fu)
         //获取memcached key 值
         m.get_user_by_key(data.user,function(err,data){
 
-            eval("var u="+data)
+            var u=JSON.parse(data);
+
             if(u==null || u==undefined)
             {
               errMessage("error","用户没有登陆，请重新登陆！");
@@ -89,7 +90,8 @@ exports.bll=function(socket,fu)
              console.log(data);
              if( !err && data)
              {
-                eval("var u="+data);
+                var u=JSON.parse(data);
+
                 if(u==undefined || u==null){ return; }
                 var user=u.user;
                 user["is_online"]="false"
