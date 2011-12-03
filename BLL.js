@@ -11,9 +11,9 @@ exports.bll=function(socket,fu)
     this.connection=function(data)
     {
         console.log(data);
-        var user_key=data.user;
+        var user_key=data.key;
         //获取memcached key 值
-        m.get_user_by_key(data.user,function(err,data){
+        m.get_user_by_key(user_key,function(err,data){
 
             var u=JSON.parse(data);
 
@@ -30,7 +30,7 @@ exports.bll=function(socket,fu)
             user["key"]=user_key
             user["is_online"]='true' //上线
             user["socket_id"]=socket.id;
-            console.log(socket.id);
+
             TaglinUser(user);       //标识用户上线
 
             islinUserbyId(user)     //判断是否在线
@@ -57,7 +57,8 @@ exports.bll=function(socket,fu)
         });
     };
 
-    this.message_histroy=function(data)
+    //聊天记录
+    this.message_histroy=function(data)  //--
     {
         /**db.queryhistry(data.id,data.sid,function(err, results, fields){
             if(!err)
@@ -108,7 +109,7 @@ exports.bll=function(socket,fu)
     };
 
     //搜索好友
-    this.searchFriends=function(data)
+    this.searchFriends=function(data) //--
     {
         if(data==null || data=="")
         {
@@ -135,7 +136,7 @@ exports.bll=function(socket,fu)
     };
 
     //邀请好友
-    this.nFriends=function(data)
+    this.nFriends=function(data) //--
     {
         if(data.user_id==undefined || data.suser_id==undefined)
         {
@@ -148,7 +149,7 @@ exports.bll=function(socket,fu)
     };
 
     //同意加入好友
-    this.argeeFriends=function(data)
+    this.argeeFriends=function(data) //--
     {
         var callback=function(err,results)
         {
@@ -214,7 +215,7 @@ exports.bll=function(socket,fu)
     }
 
     //将发送信息保存
-    this.add_messages=function(data)
+    this.add_messages=function(data) //--
     {
        var su=null //获取发送的用户资料
 
@@ -236,7 +237,7 @@ exports.bll=function(socket,fu)
 
                    // db.insert(msg); // mysqldb
                    redis.addMessage([msg]);
-                   sendMessage({suser_id:data.user_send,user_id:data.user});
+                   sendMessage({suser_id:data.suser_id,user_id:data.zuser_id});
                 }
             }
         }

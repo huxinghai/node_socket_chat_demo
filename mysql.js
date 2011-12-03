@@ -15,7 +15,7 @@ var query=function(sql,fn)
 
 exports.queryUser=function(sh,callback)
 {
-    query("select *from users where login like '%"+sh.login+"%' and id<>"+ sh.id +" and not id in (select zuser_id from friends where user_id="+ sh.id +")",callback);
+    query("select *from users where login like '%"+sh.login+"%' and id<>"+ sh.suser_id +" and not id in (select zuser_id from friends where user_id="+ sh.suser_id +")",callback);
 }
 
 //查询历史信息
@@ -65,7 +65,7 @@ exports.update_online=function(user)
 //激请加好友
 exports.add_friends=function(fr)
 {
-    var query=client.query("INSERT INTO friends set user_id=?,zuser_id=?",[fr.user_id,fr.zuser_id]);
+    var query=client.query("INSERT INTO friends set user_id=?,zuser_id=?",[fr.suser_id,fr.zuser_id]);
 
     return query;
 }
@@ -74,7 +74,7 @@ exports.add_friends=function(fr)
 exports.queryFriendsFirst=function(data,callback)
 {
         query("select a.zuser_id,a.user_id as id,a.user_id,b.login from friends as a "+
-          "left join users as b on a.zuser_id=b.id where a.user_id="+data.user_id+" and a.zuser_id='"+data.zuser_id+"'",callback);
+          "left join users as b on a.zuser_id=b.id where a.user_id="+data.suser_id+" and a.zuser_id='"+data.zuser_id+"'",callback);
 }
 
 //查询好友
@@ -88,7 +88,7 @@ exports.existfirends=function(user,callback)
 {
     query("select a.*,b.login as slogin,c.login from friends as a "+
             "left join users as b on a.user_id=b.id"+
-            " left join users as c on a.zuser_id=c.id where a.user_id="+ user.user_send +" and a.zuser_id="+user.user,callback)
+            " left join users as c on a.zuser_id=c.id where a.user_id="+ user.suser_id +" and a.zuser_id="+user.zuser_id,callback)
 }
 
 //判断是否在存

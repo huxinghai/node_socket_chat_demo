@@ -62,14 +62,14 @@ exports.queryhistroy=function(data,callback)
                 }
             }
 
-            eval("var m="+msg);
+            var m=JSON.parse(msg);
             if(m==null || m==undefined)
             {
                 callMethod();
                 return;
             }
 
-            if(m.state=="true" && ((m.user_id==data.id && m.suser_id==data.sid) || (m.suser_id==data.id && m.user_id==data.sid)))
+            if(m.state=="true" && ((m.user_id==data.id && m.suser_id==data.suser_id) || (m.suser_id==data.id && m.user_id==data.suser_id)))
             {
                 Msgs.push(m);
             }
@@ -124,7 +124,7 @@ function queryMessage(u,fncallback,state)
 
             if(msg)
             {
-                eval("var m="+msg);
+                var m=JSON.parse(msg);
                 if(m!=null && m!=undefined)
                 {
                     if(u.user_id==m.user_id)
