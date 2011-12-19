@@ -82,24 +82,27 @@ exports.queryhistroy=function(data,callback)
 }
 
 //标识状态
-exports.updateMessageState=function(data)
+exports.updateMessageState=function(ids)
 {
-   for(var i=0;i<data.length;i++)
+   for(var i=0;i<ids.length;i++)
    {
-       /**get(tb.messages+":"+data[i].id,function(msg){
-            eval("var m"+msg);
-            if(m==undefined || m==null)
+       get(tb.messages+":"+ids[i],function(err,msg){
+            var m=JSON.parse(msg);
+            if(m==undefined || m==null || m==false)
             {
                 return;
             }
-
-
-       });**/
-       data[i].state="true";
+            m.state="true";
+            set(tb.messages+":"+m.id,JSON.stringify(m),function(err,result){
+              console.log(err);
+              console.log(result);
+            })
+       });
+       /**data[i].state="true";
        set(tb.messages+":"+data[i].id,JSON.stringify(data[i]),function(err,result){
             console.log(err);
             console.log(result);
-       })
+       })**/
    }
 }
 

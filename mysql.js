@@ -5,7 +5,7 @@ var client=mysql.createClient({
     password:""
 });
 
-client.query("USE chat")
+client.query("USE neza_development")
 
 //查询
 var query=function(sql,fn)
@@ -47,7 +47,7 @@ exports.insertMessage=function(msg)
 //通知好友
 exports.noticeFriends=function(user_id,callback)
 {
-    query("select a.*,b.login,c.login as slogin from messages as a"+
+    query("select a.*,b.name,c.name as sname,'Friend' as type from messages as a"+
           " left join users as b on a.user_id=b.id "+
           " left join users as c on a.suser_id=c.id where state='false' and a.user_id="+user_id,callback);
 }
@@ -73,20 +73,27 @@ exports.add_friends=function(fr)
 //查询用户的好友
 exports.queryFriendsFirst=function(data,callback)
 {
-        query("select a.zuser_id,a.user_id as id,a.user_id,b.login from friends as a "+
+        query("select b.login,b.name as sname,b.id as zuser_id,a.user_id as id from friends as a "+
           "left join users as b on a.zuser_id=b.id where a.user_id="+data.suser_id+" and a.zuser_id='"+data.zuser_id+"'",callback);
 }
 
-//查询好友
+//查询所有好友
 exports.query_friends=function(user_id,callback)
 {
-    query("select a.zuser_id,a.user_id,b.id,b.login from friends as a "+
+    query("select a.zuser_id,a.user_id,b.id,b.name from friends as a "+
           "left join users as b on a.zuser_id=b.id where a.user_id="+user_id,callback);
+}
+
+//查询某个好友
+exports.query_friendOne=function(user_id,zuser_id,callback)
+{
+    query("select a.zuser_id,a.user_id,b.id,b.name from friends as a "+
+          "left join users as b on a.zuser_id=b.id where a.user_id="+user_id+" and a.zuser_id="+zuser_id,callback);
 }
 
 exports.existfirends=function(user,callback)
 {
-    query("select a.*,b.login as slogin,c.login from friends as a "+
+    query("select a.*,b.name as sname,c.name from friends as a "+
             "left join users as b on a.user_id=b.id"+
             " left join users as c on a.zuser_id=c.id where a.user_id="+ user.suser_id +" and a.zuser_id="+user.zuser_id,callback)
 }
@@ -98,9 +105,9 @@ exports.existUserId=function(user_id,callback)
 };
 
 //标识阅读
-exports.updateMessage=function(ids)
+exports.updateMessage=function(id,user_id)
 {
-    var query=client.query("UPDATE messages set state='true' where id in (?)",[ids]);
+    var query=client.query("UPDATE messages set state='true' where id=? and user_id=?",[id,user_id]);
 
     return query;
 }

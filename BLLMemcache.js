@@ -87,7 +87,8 @@ exports.queryMemcachedbyKeyifUserId=function(user,errfn)
        if(data)
        {
           var callback=function(u){
-              errfn("error",u.login+"已经异地登陆了！",u.socket_id)
+              errfn("error",u.name+"已经异地登陆了！",u.socket_id)
+              m.del(u.key);
           }
           stateCallback(data,user,errfn,callback);
        }
@@ -111,8 +112,8 @@ exports.queryUserIdOnline=function(users,errfn,callback)
 //状态的回调
 function stateCallback(data,user,errfn,callback)
 {
- 		var keys = Object.keys(data[0]);
-		keys.pop();//删除server 键
+	var keys = Object.keys(data[0]);
+	keys.pop();//删除server 键
 
     console.log(keys);
     var isk=true;
@@ -146,18 +147,18 @@ function stateCallback(data,user,errfn,callback)
                               if(!err)
                               {
                                   if(!isk){return;}
-                                  console.log(results);
-                                  eval("var u="+results);
+
+                                  var u=JSON.parse(results);
+
                                   console.log(u);
                                   if(u==null || u==undefined)
                                   {
                                       return;
                                   }
-                                  if(user.id==u.user.id)
+                                  if(user.id==u.id)
                                   {
                                       isk=false; //关闭查找
-                                      callback(u.user);
-                                      //fn.closeConnection(_key);
+                                      callback(u);
                                       return;
                                   }
                               }

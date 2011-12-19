@@ -17,13 +17,14 @@ exports.bll=function(socket,fu)
 
             var u=JSON.parse(data);
 
-            if(u==null || u==undefined)
+            if(u==null || u==undefined || u==false)
             {
               errMessage("error","用户没有登陆，请重新登陆！");
               return;
             }
-
-            var user=u.user;
+            console.log("----------------------")
+            console.log(u);
+            var user=u;
             //取名字
             socket.name=user_key
 
@@ -41,8 +42,8 @@ exports.bll=function(socket,fu)
                 {
                     if(results.length>0)
                     {
-                        socket.emit(user.key,{data:results,type:"Messages"});
-                        updateMessageState(results)
+                        var relts=toMessageResults(results);
+                        socket.emit(user.key,{data:relts,type:"Messages"});
                     }
                 }
                 else
@@ -56,6 +57,49 @@ exports.bll=function(socket,fu)
             getNoticeMessage(user.id); //看有通知信息吗
         });
     };
+
+    function toMessageResults(data)
+    {
+        var info=[]
+        for(var i=0;i<data.length;i++)
+        {
+
+            var id=data[i].id;
+            var create_date=data[i].create_date;
+            var messages=data[i].messages;
+            var isk=false;
+            for(var j=0;j<info.length;j++)
+            {
+
+                if(data[i].user_id==info[j].user_id)
+                {
+                    info[j]["msgs"].push({id:id,create_date:create_date,messages:messages})
+                    isk=true
+                    break;
+                }
+            }
+
+            if(isk){ continue };
+
+            delete(data[i].id);
+            delete(data[i].create_date);
+            delete(data[i].messages);
+
+            data[i]["msgs"]=[{id:id,create_date:create_date,messages:messages}];
+            data[i]["type"]="Message"
+            info.push(data[i]);
+        }
+
+        return info;
+    }
+
+    this.updateMsgState=function(ids)
+    {
+        if(ids.length>0)
+        {
+            updateMessageState(ids);
+        }
+    }
 
     //聊天记录
     this.message_histroy=function(data)  //--
@@ -149,8 +193,9 @@ exports.bll=function(socket,fu)
     };
 
     //同意加入好友
-    this.argeeFriends=function(data) //--
+    this.agreeFriends=function(data) //--
     {
+
         var callback=function(err,results)
         {
             if(!err)
@@ -161,19 +206,24 @@ exports.bll=function(socket,fu)
 
                     var callbackquery=function(err,results)
                     {
-                        console.log(results);
                         if(!err)
                         {
                            var callbackNotice=function(u)
                             {
+                                for(var n=0;n<results.length;n++)
+                                {
+                                    results[n]["id"]=results[n]["zuser_id"]
+                                }
+
                                 fu.io.sockets.socket(u.socket_id).emit("alluser",results);
 
                                 var tuser=[]
                                 for(var i=0;i<results.length;i++)
                                 {
-                                     tuser.push({key:'',id:results[i].zuser_id});
+                                     tuser.push({key:'',id:results[i].id});
                                 }
 
+                                //当前的好友是否在线
                                 var callbackOnline=function(use)
                                 {
                                     fu.io.sockets.socket(u.socket_id).emit("alluser",[use]);
@@ -204,7 +254,7 @@ exports.bll=function(socket,fu)
                     var callbackMemcached=function(u)
                     {
                         fu.io.sockets.socket(u.socket_id).emit(u.key,{data:results,type:"Friends"});
-                        updateSysMessageState(results); //更新状态
+
                     }
                     //如果用户在线把信息发送给它
                     m.queryUserIdOnline(users,errMessage,callbackMemcached);
@@ -232,8 +282,8 @@ exports.bll=function(socket,fu)
                             suser_id:results[0].user_id,
                             user_id:results[0].zuser_id,
                             messages:data.messages,
-                            slogin:results[0].slogin,
-                            login:results[0].login,create_date:new Date()};
+                            sname:results[0].sname,
+                            name:results[0].name,create_date:new Date()};
 
                    // db.insert(msg); // mysqldb
                    redis.addMessage([msg]);
@@ -257,7 +307,7 @@ exports.bll=function(socket,fu)
     //添加用户
     var TaglinUser=function(user)
     {
-        m.setMemached(user.key,JSON.stringify({user:user}));
+        m.setMemached(user.key,JSON.stringify(user));
     };
 
 
@@ -277,17 +327,19 @@ exports.bll=function(socket,fu)
             {
                 if(results.length>0)
                 {
-
-                    var users=[{key:"",id:results[0].suser_id},{key:"",id:results[0].user_id}];
+                    //{key:"",id:results[0].suser_id},
+                    var users=[{key:"",id:results[0].user_id}];
 
                     var queryKeyMemcached=function(us)
                     {
-                        fu.io.sockets.socket(us.socket_id).emit(us.key,{data:results,type:"Messages"});
+                        var resuInfo=toMessageResults(results);
+
+                        fu.io.sockets.socket(us.socket_id).emit(us.key,{data:resuInfo,type:"Messages"});
                         //updateMessagqueryhistroyeState(results);
-                        if(us.id==u.user_id)
+                        /**if(us.id==u.user_id)
                         {
                             updateMessageState(results);
-                        }
+                        }**/
                     }
                     //如果用户在线把信息发送给它
                     m.queryUserIdOnline(users,errMessage,queryKeyMemcached);
@@ -307,15 +359,12 @@ exports.bll=function(socket,fu)
     };
 
     //更新系统信息状态
-    function updateSysMessageState(results)
+    this.updateSysMessageState=function(info)
     {
-        var ids="";
-        for(var i=0;i<results.length;i++)
+        if(info)
         {
-            ids+=ids=="" ? results[i].id : ","+results[i].id
+            db.updateMessage(info.id,info.suser_id); //mysqldb
         }
-
-        db.updateMessage(ids); //mysqldb
     }
 
     //更新聊天状态
@@ -336,10 +385,12 @@ exports.bll=function(socket,fu)
             if(!err)
             {
                 m.queryUserIdOnline(results,errMessage,function(u){
+                   console.log("query friends u----------");
+                   console.log(u);
                    fu.io.sockets.socket(u.socket_id).emit("alluser",[user]);
                    fu.io.sockets.socket(user.socket_id).emit("alluser",[u]);
                 })
-                socket.emit("alluser",results);//告诉自己
+                //socket.emit("alluser",results);//告诉自己
             }
         };
 
