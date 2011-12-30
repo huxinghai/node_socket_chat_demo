@@ -1,6 +1,6 @@
 var mc=require("memcached");
 
-var m=new mc('localhost:11211');
+var m=new mc('192.168.2.139:11211');
 //m.connect()
 
 
@@ -12,36 +12,38 @@ exports.get_user_by_key=function(key,fn)
     m.get(key,fn)
 }
 
-exports.ClearAll=function()
+exports.delOfflineUserb=function(errfn,callback)
 {
     Getstate(function(err,data){
-        for(var key in data[0])
-        {
-            if(key!="server")
-            {
-                 m.cachedump(data[0].server,key,data[0][key].number,function(err,results){
-                    if(!err)
-                    {
-                        results = Array.isArray(results) ? results : [results];
-                        if(results.length>0)
-                        {
-                            for(var i=0;i<results.length;i++)
-                            {
-                                console.log(results[i].key);
-                                //m.get(results[i].key,fn);
-                                m.del(results[i].key,function(err,result){console.log(result)});
-                            }
-                        }
-                    }
-                    else
-                    {
-                        console.log(err);
-                    }
-                 })
-            }
-        }
-        m.end();
-    });
+       if(data)
+       {
+			var callbackAccion=function(err,results)
+			{
+				if(!err)
+				{
+					if(results)
+					{
+						var user=JSON.parse(results);
+						if(!user)
+						{
+							return;
+						}
+						if(user.is_online=="false")
+						{
+							m.del(user.key,function(err,data){
+								if(!data)
+								{
+									callback(user);
+									console.log(user.name+"下线了!");
+								}
+							})
+						}
+					}
+				}
+			}	
+          stateCallback(data,errfn,callbackAccion);
+       }
+   });
 }
 
 exports.deleteMemcacheBykey=function(key,fn)
@@ -86,11 +88,18 @@ exports.queryMemcachedbyKeyifUserId=function(user,errfn)
        console.log(data);
        if(data)
        {
-          var callback=function(u){
-              errfn("error",u.name+"已经异地登陆了！",u.socket_id)
-              m.del(u.key);
-          }
-          stateCallback(data,user,errfn,callback);
+			var callback=function(u){
+				if(u.is_online=="true")
+				{
+					errfn("error",u.name+"已经异地登陆了！"+JSON.stringify(u),u.socket_id)
+				}
+				m.del(u.key);
+			}
+			var callbackAccion=function(err,results)
+			{
+				callbackGetUserByKey(err,results,callback,user);
+			}	
+          stateCallback(data,errfn,callbackAccion);
        }
    });
 }
@@ -98,84 +107,78 @@ exports.queryMemcachedbyKeyifUserId=function(user,errfn)
 //查看user_id 是否在线
 exports.queryUserIdOnline=function(users,errfn,callback)
 {
-    Getstate(function(err,data){
+
+	Getstate(function(err,data){
         if(data)
         {
-            for(var i=0;i<users.length;i++)
-            {
-                stateCallback(data,users[i],errfn,callback);
-            }
+			for(var i=0;i<users.length;i++)
+			{
+				callbackUserIdOnline(data,errfn,callback,users[i])
+			}
         }
     })
 }
 
+function callbackUserIdOnline(data,errfn,callback,user)
+{
+	var callbackAccion=function(err,results)
+	{
+		callbackGetUserByKey(err,results,callback,user);
+	}
+
+
+	stateCallback(data,errfn,callbackAccion);
+}
+
 //状态的回调
-function stateCallback(data,user,errfn,callback)
+function stateCallback(data,errfn,callback)
 {
 	var keys = Object.keys(data[0]);
 	keys.pop();//删除server 键
+	
+	var callbackAccion=function(err,results)
+	{
+		callbackCachedump(err,results,callback);
+	}
 
     console.log(keys);
-    var isk=true;
     for(var j=0;j<keys.length;j++)
     {
-       if(!isk){return}
-       Getcachedump(data[0].server,keys[j],data[0][keys[j]].number,function(err,results){
-          var errMessage=function(err){
-              isk=false;
-              console.log(err);
-              errfn("error",err);
-          };
-
-          if(!err)
-          {
-              if(results)
-              {
-                  results = Array.isArray(results) ? results : [results];
-                  if(results.length>0)
-                  {
-                      for(var i=0;i<results.length;i++)
-                      {
-                          if(!isk){return;}
-
-                          var _key=results[i].key;
-                           if(_key==user.key)
-                           {
-                              continue
-                           }
-                          exports.get_user_by_key(_key,function(err,results){
-                              if(!err)
-                              {
-                                  if(!isk){return;}
-
-                                  var u=JSON.parse(results);
-
-                                  console.log(u);
-                                  if(u==null || u==undefined)
-                                  {
-                                      return;
-                                  }
-                                  if(user.id==u.id)
-                                  {
-                                      isk=false; //关闭查找
-                                      callback(u);
-                                      return;
-                                  }
-                              }
-                              else
-                              {
-                                  errMessage(err);
-                              }
-                          });
-                      }
-                  }
-              }
-          }
-          else
-          {
-              errMessage(err);
-          }
-       })
+       Getcachedump(data[0].server,keys[j],data[0][keys[j]].number,callbackAccion)
     }
+}
+
+function callbackCachedump(err,results,callback)
+{
+    if(!err)
+    {
+        if(results)
+        {
+            results = Array.isArray(results) ? results : [results];
+            if(results.length>0)
+            {
+                for(var i=0;i<results.length;i++)
+                {
+                    var _key=results[i].key;
+                    exports.get_user_by_key(_key,callback);
+                }
+            }
+        }
+    }
+}
+
+function callbackGetUserByKey(err,results,callback,user)
+{
+     if(!err)
+     {
+         var u=JSON.parse(results);
+         console.log(u);
+         if(u==null || u==undefined){return;}
+         if(user.id==u.id && user.key!=u.key)
+         {
+             callback(u);
+             return;
+         }
+     }
 }
 

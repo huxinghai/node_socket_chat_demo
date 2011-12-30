@@ -4,7 +4,7 @@ var app = require('http').createServer(handlerRequest)
     , path=require("path")
     , io = require('socket.io').listen(app)
     , part=9090
-    , host="192.168.2.126"
+    , host="192.168.2.139"
 
 
 exports.io=io

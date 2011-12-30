@@ -4,10 +4,6 @@ var  fu=require("./fu")
 
 
 fu.io.sockets.on('connection', function (socket) {
-  socket.on("SystemMessage",function(data){
-      console.log(data);
-      socket.emit("SystemMessage",data);
-  })
 
   //连接  //
   socket.on("connect",function(data){
@@ -28,7 +24,7 @@ fu.io.sockets.on('connection', function (socket) {
 
   //断开连接
   socket.on('disconnect', function () {
-      //bll.closeSocket(socket.name);
+		setTimeout(bll.closeSocket,3000,socket.name);
   })
 
   //搜索好友

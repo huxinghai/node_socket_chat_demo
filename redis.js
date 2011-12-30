@@ -1,5 +1,6 @@
 var redis=require("redis")
-  , client=redis.createClient(6379,"localhost");
+	debugger
+  var client=redis.createClient(6379,"localhost");
 client.select(1);
 
 

@@ -2,8 +2,6 @@ var   db =require("./mysql")
     , m=require("./BLLMemcache")
     , redis=require("./redis");
 
-//清除上次的memcache
-m.ClearAll();
 
 //功能逻辑
 exports.bll=function(socket,fu)
@@ -15,20 +13,15 @@ exports.bll=function(socket,fu)
         //获取memcached key 值
         m.get_user_by_key(user_key,function(err,data){
 
-            var u=JSON.parse(data);
+            var user=JSON.parse(data);
 
-            if(u==null || u==undefined || u==false)
+            if(user==null || user==undefined || user==false)
             {
               errMessage("error","用户没有登陆，请重新登陆！");
               return;
             }
-            console.log("----------------------")
-            console.log(u);
-            var user=u;
             //取名字
             socket.name=user_key
-
-            user["key"]=user_key
             user["is_online"]='true' //上线
             user["socket_id"]=socket.id;
 
@@ -71,7 +64,7 @@ exports.bll=function(socket,fu)
             for(var j=0;j<info.length;j++)
             {
 
-                if(data[i].user_id==info[j].user_id)
+                if(data[i].suser_id==info[j].suser_id)
                 {
                     info[j]["msgs"].push({id:id,create_date:create_date,messages:messages})
                     isk=true
@@ -128,30 +121,37 @@ exports.bll=function(socket,fu)
 
     this.closeSocket=function(socket_name)
     {
-        if(socket_name==undefined){return;}
-         console.log("--key:"+socket_name+" connection close ----->");
-         //获取memached key的信息
-         m.get_user_by_key(socket_name,function(err,data){
-             console.log(data);
-             if( !err && data)
-             {
-                var u=JSON.parse(data);
+		if(socket_name==undefined){return;}
+		console.log("--key:"+socket_name+" connection close ----->");
+		inspectorIsLine(socket_name);
+   };
 
-                if(u==undefined || u==null){ return; }
-                var user=u.user;
-                user["is_online"]="false"
+	function inspectorIsLine(key)
+	{
+		//获取memached key的信息
+		m.get_user_by_key(key,function(err,data){
+			console.log(data);
+			if( !err || data)
+			{
+				var user=JSON.parse(data);
 
-                //删除memached的key
-                m.deleteMemcacheBykey(socket_name,function(err,data){
-                    if(data)
-                    {
-                        notice_user(user);        //告诉其它用户
-                    }
-                });
-             }
-         })
-    };
-
+				if(user==undefined || user==null){ return; }
+			
+				if(user.is_online=="false")
+				{
+					//删除memached的key
+					 m.deleteMemcacheBykey(key,function(err,data){
+					     if(data)
+					     {
+					         notice_user(user);        //告诉其它用户
+					     }
+					 });
+				}
+			}
+		})
+	}
+		
+	//setInterval(m.delOfflineUserb,2000,[errMessage,notice_user]);
     //搜索好友
     this.searchFriends=function(data) //--
     {
@@ -270,6 +270,11 @@ exports.bll=function(socket,fu)
        var su=null //获取发送的用户资料
 
        var u=null  //获取接收用户的资料
+		if(!data.messages)
+		{
+			errMessage("notice","发送信息不能为空!");
+			return;
+		} 
 
         var addCallback=function(err, results, fields)
         {
@@ -407,5 +412,8 @@ exports.bll=function(socket,fu)
         }
         s.emit("error",{type:_type,messages:_messages});
     }
+
+	//清除上次的memcache
+	m.delOfflineUserb(errMessage,notice_user);
 }
 
