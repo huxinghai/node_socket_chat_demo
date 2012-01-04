@@ -1,9 +1,7 @@
-var mysql=require('mysql');
+var mysql=require('mysql'),
+    config=require("./config").mysql;
 
-var client=mysql.createClient({
-    user:"root",
-    password:""
-});
+var client=mysql.createClient(config);
 
 client.query("USE neza_development")
 

@@ -1,6 +1,7 @@
-var mc=require("memcached");
+var mc=require("memcached"),
+    config=require("./config").memcached;
 
-var m=new mc('192.168.2.139:11211');
+var m=new mc(config.host);
 //m.connect()
 
 
