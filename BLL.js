@@ -151,7 +151,6 @@ exports.bll=function(socket,fu)
 		})
 	}
 		
-	//setInterval(m.delOfflineUserb,2000,[errMessage,notice_user]);
     //搜索好友
     this.searchFriends=function(data) //--
     {
@@ -207,37 +206,35 @@ exports.bll=function(socket,fu)
                     var callbackquery=function(err,results)
                     {
                         if(!err)
-                        {
-                           var callbackNotice=function(u)
-                            {
-                                for(var n=0;n<results.length;n++)
-                                {
-                                    results[n]["id"]=results[n]["zuser_id"]
-                                }
+                        {                            
+                            if(results.length>0)
+                            {                            
+                                var _user={id:results[0].user_id,key:null};
 
-                                fu.io.sockets.socket(u.socket_id).emit("alluser",results);
-
-                                var tuser=[]
-                                for(var i=0;i<results.length;i++)
+                                var callbackNotice=function(u)
                                 {
-                                     tuser.push({key:'',id:results[i].id});
-                                }
+                                    
+                                    //先把好友资料发送到客户端    
+                                    fu.io.sockets.socket(u.socket_id).emit("alluser",results);
 
-                                //当前的好友是否在线
-                                var callbackOnline=function(use)
-                                {
-                                    fu.io.sockets.socket(u.socket_id).emit("alluser",[use]);
+                                    var tuser={id:results[0].zuser_id,key:null}                                    
+
+                                    //当前的好友是否在线
+                                    var callbackOnline=function(use)
+                                    {
+                                        fu.io.sockets.socket(u.socket_id).emit("alluser",[use]);
+                                    }
+                                    m.queryUserIdOnline([tuser],errMessage,callbackOnline); //查看用户是否在线  
                                 }
-                                m.queryUserIdOnline(tuser,errMessage,callbackOnline);
+                                m.queryUserIdOnline([_user],errMessage,callbackNotice);//如果用户在线把好友发送给客户端
                             }
-                            m.queryUserIdOnline(results,errMessage,callbackNotice);
                         }
                     }
-                    db.queryFriendsFirst(data,callbackquery);
+                    db.queryFriendsFirst(data,callbackquery);  //查询好友信息
                 }
             }
         }
-        db.queryFriendsFirst(data,callback);
+        db.queryFriendsFirst(data,callback); //判断是否存在好友
     };
 
 

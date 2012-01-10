@@ -86,7 +86,7 @@ exports.setMemached=function(key,value)
 exports.queryMemcachedbyKeyifUserId=function(user,errfn)
 {
    Getstate(function(err,data){
-       console.log(data);
+
        if(data)
        {
 			var callback=function(u){
@@ -94,13 +94,15 @@ exports.queryMemcachedbyKeyifUserId=function(user,errfn)
 				{
 					errfn("error",u.name+"已经异地登陆了！"+JSON.stringify(u),u.socket_id)
 				}
+
 				m.del(u.key);
 			}
+
 			var callbackAccion=function(err,results)
 			{
 				callbackGetUserByKey(err,results,callback,user);
 			}	
-          stateCallback(data,errfn,callbackAccion);
+            stateCallback(data,errfn,callbackAccion);
        }
    });
 }
@@ -111,15 +113,16 @@ exports.queryUserIdOnline=function(users,errfn,callback)
 
 	Getstate(function(err,data){
         if(data)
-        {
-			for(var i=0;i<users.length;i++)
-			{
-				callbackUserIdOnline(data,errfn,callback,users[i])
-			}
+        { 
+  			for(var i=0;i<users.length;i++)
+  			{
+  				callbackUserIdOnline(data,errfn,callback,users[i])
+  			}
         }
     })
 }
 
+//查询在线用户
 function callbackUserIdOnline(data,errfn,callback,user)
 {
 	var callbackAccion=function(err,results)
@@ -134,21 +137,21 @@ function callbackUserIdOnline(data,errfn,callback,user)
 //状态的回调
 function stateCallback(data,errfn,callback)
 {
-	var keys = Object.keys(data[0]);
-	keys.pop();//删除server 键
-	
-	var callbackAccion=function(err,results)
-	{
-		callbackCachedump(err,results,callback);
-	}
+    var keys = Object.keys(data[0]);
+    keys.pop();//删除server 键
 
-    console.log(keys);
+    var callbackAccion=function(err,results)
+    {
+        callbackCachedump(err,results,callback);
+    }
+
     for(var j=0;j<keys.length;j++)
     {
-       Getcachedump(data[0].server,keys[j],data[0][keys[j]].number,callbackAccion)
+        Getcachedump(data[0].server,keys[j],data[0][keys[j]].number,callbackAccion)
     }
 }
 
+//获取cachedump 段的keys
 function callbackCachedump(err,results,callback)
 {
     if(!err)
@@ -168,14 +171,16 @@ function callbackCachedump(err,results,callback)
     }
 }
 
+//判断当前的用户
 function callbackGetUserByKey(err,results,callback,user)
 {
      if(!err)
      {
          var u=JSON.parse(results);
-         console.log(u);
+
          if(u==null || u==undefined){return;}
-         if(user.id==u.id && user.key!=u.key)
+
+         if(user.id==u.id && u.key != user.key)
          {
              callback(u);
              return;

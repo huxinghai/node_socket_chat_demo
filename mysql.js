@@ -71,7 +71,7 @@ exports.add_friends=function(fr)
 //查询用户的好友
 exports.queryFriendsFirst=function(data,callback)
 {
-        query("select b.login,b.name as sname,b.id as zuser_id,a.user_id as id from friends as a "+
+        query("select b.login,b.name as sname,a.id,a.user_id,a.zuser_id from friends as a "+
           "left join users as b on a.zuser_id=b.id where a.user_id="+data.suser_id+" and a.zuser_id='"+data.zuser_id+"'",callback);
 }
 
