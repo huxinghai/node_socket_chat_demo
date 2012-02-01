@@ -69,6 +69,9 @@ function Getstate(fn)
 
 exports.setMemached=function(key,value)
 {
+    console.log("---------------set memcached-------");
+    console.log(key);
+    console.log(value);
     m.set(key,value,10000,function(err,results){
         if(!err)
         {
