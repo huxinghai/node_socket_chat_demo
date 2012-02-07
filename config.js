@@ -6,7 +6,7 @@ exports.mysql={
 }
 
 exports.memcached={
-	host:"192.168.2.223:11211"
+	host:"localhost:11211"
 }
 
 exports.redis={

@@ -21,9 +21,10 @@ exports.bll=function(socket,fu)
               return;
             }
             //取名字
-            socket.name=user_key
-            user["is_online"]='true' //上线
-            user["socket_id"]=socket.id;
+            socket.name = user_key;
+            user["is_online"] = 'true'; //上线
+            user["socket_id"] = socket.id;
+            user["key"] = user_key;
 
             TaglinUser(user);       //标识用户上线
 
