@@ -22,9 +22,9 @@ exports.bll=function(socket,fu)
             }
             //取名字
             socket.name = user_key;
-            user["is_online"] = 'true'; //上线
+            //user["is_online"] = 'true'; //上线
             user["socket_id"] = socket.id;
-            user["key"] = user_key;
+            //user["key"] = user_key;
 
             TaglinUser(user);       //标识用户上线
 
@@ -390,10 +390,14 @@ exports.bll=function(socket,fu)
                 m.queryUserIdOnline(results,errMessage,function(u){
                    console.log("query friends u----------");
                    console.log(u);
+                   console.log("query friends user------");
+                   console.log(user);
+
+                    //上线好友告诉自己
+                   socket.emit("alluser",[u]);
+                   //告诉好友自己上线
                    fu.io.sockets.socket(u.socket_id).emit("alluser",[user]);
-                   fu.io.sockets.socket(user.socket_id).emit("alluser",[u]);
                 })
-                //socket.emit("alluser",results);//告诉自己
             }
         };
 
