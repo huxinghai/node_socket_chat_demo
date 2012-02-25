@@ -51,37 +51,113 @@ init();
 }**/
 
 //查询历史聊天记录
-exports.queryhistroy=function(data,callback)
+exports.queryhistroyAll=function(data,callback)
 {
     var Msgs=[];
     var curr_callback=function(id,ids)
     {
         get(tb.messages+":"+id,function(err,msg){
-            var callMethod=function()
+            if(!err)
             {
-                if(ids==id)
+                var callMethod=function()
                 {
-                    callback(Msgs);
+                    if(ids==id)
+                    {
+                        callback(Msgs);
+                    }
                 }
-            }
 
-            var m=JSON.parse(msg);
-            if(m==null || m==undefined)
-            {
+                var m=JSON.parse(msg);
+                if(m==null || m==undefined)
+                {
+                    callMethod();
+                    return;
+                }
+
+                if(m.state=="true" && ((m.user_id==data.id && m.suser_id==data.suser_id) || (m.suser_id==data.id && m.user_id==data.suser_id)))
+                {
+                    Msgs.push(m);
+                }
+
+
                 callMethod();
-                return;
             }
-
-            if(m.state=="true" && ((m.user_id==data.id && m.suser_id==data.suser_id) || (m.suser_id==data.id && m.user_id==data.suser_id)))
-            {
-                Msgs.push(m);
-            }
-
-
-            callMethod();
         })
     }
     queryTableIds(tb.messages,curr_callback);
+}
+
+//查询一个星期的历史记录
+exports.queryhistroyWeek = function(user_id,zuser_id,callback)  //user_id:用户ID zuser_id:好友ID
+{
+    var Msgs=[];
+    var curr_callback=function(id,ids)
+    {
+        get(tb.messages+":"+id,function(err,msg){
+            if(!err)
+            {
+                var callMethod=function()
+                {
+                    if(ids==id)
+                    {
+                        callback(Msgs);
+                    }
+                }
+
+                var m=JSON.parse(msg);
+                if(m==null || m==undefined)
+                {
+                    callMethod();
+                    return;
+                }
+
+                //查询两人的聊天记录
+                var wdate = addDay(null,-7); //获取7天前的日期
+                var mdate = new Date(m.create_date); //发送信息的日期
+                if(((m.user_id==user_id && m.suser_id == zuser_id) || (m.suser_id==user_id && m.user_id==zuser_id)) && wdate <= mdate)
+                {
+                    Msgs.push(m);
+                }
+
+                callMethod();
+            }
+        })
+    }
+
+    queryTableIds(tb.messages,curr_callback);
+}
+
+//添加天
+function addDay(date,_day)
+{
+    var d = date
+    if(!d)
+    {
+        d = new Date();  
+    }         
+    
+    var day = d.getDate();
+    var t = day+_day
+    if(t <= 0)
+    {
+        var _month = d.getMonth()-1
+        d.setDate(0); //把天数还原
+        if(_month<0)
+        {
+            d.setDate(d.getDate()+t);
+        }
+        else
+        {
+            d.setDate(d.getDate()+t);
+        }
+    }
+    else
+    {
+        d.setDate(t);
+    }
+    d.setHours(0);
+    d.setMinutes(0);
+    return d
 }
 
 //标识状态
@@ -101,11 +177,6 @@ exports.updateMessageState=function(ids)
               console.log(result);
             })
        });
-       /**data[i].state="true";
-       set(tb.messages+":"+data[i].id,JSON.stringify(data[i]),function(err,result){
-            console.log(err);
-            console.log(result);
-       })**/
    }
 }
 
@@ -159,7 +230,6 @@ function queryMessage(u,fncallback,state)
 
 function queryTableIds(tb_name,callback)
 {
-    //get(tb.messages+":user_id:")
     get(tb_name+"Id",function(err,ids){
         if(!err)
         {
