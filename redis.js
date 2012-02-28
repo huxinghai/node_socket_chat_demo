@@ -24,6 +24,11 @@ var del=function(key,fn)
     client.del(key,fn);
 }
 
+exports.mget = function(keys,fn)
+{
+    client.mget(keys,fn)
+}
+
 //自增长
 var incr=function(key,fn)
 {
@@ -248,13 +253,13 @@ function queryTableIds(tb_name,callback)
     })
 }
 
-exports.addMessage=function(trs)
+exports.addMessage=function(trs,callback)
 {
-    AddTable(tb.messages,trs);
+    AddTable(tb.messages,trs,callback);
 }
 
 //tbName 表名称 trs 行数
-function AddTable(tbName,trs)
+function AddTable(tbName,trs,callback)
 {
     var ix=0
     for(var i=0;i<trs.length;i++)
@@ -270,7 +275,10 @@ function AddTable(tbName,trs)
                     set(tbName+":"+id,JSON.stringify(tr),function(err,result){
                         console.log(err);
                         console.log(result);
-
+                        if(result=="OK")
+                        {
+                            get(tbName+":"+id,callback) //发送给自己
+                        }
                     });
                 }
             }
@@ -292,7 +300,7 @@ function initMessageId(table_name)
         {
             if(!results)
             {
-                 set(table_name+"Id","0",function(err,results){
+                set(table_name+"Id","0",function(err,results){
                     console.log(results);
                 })
             }

@@ -1,6 +1,6 @@
 var   db =require("./mysql")
 		, m=require("./BLLMemcache")
-		, redis=require("./redis");
+		, redis=require("./redis_message_bll");
 
 
 //功能逻辑
@@ -8,7 +8,6 @@ exports.bll=function(socket,fu)
 {
 	this.connection=function(data)
 	{
-		console.log(data);
 		var user_key=data.key;
 		//获取memcached key 值
 		m.get_user_by_key(user_key,function(err,data){
@@ -29,19 +28,12 @@ exports.bll=function(socket,fu)
 			islinUserbyId(user)     //判断是否在线
 
 			//接收没有在线的信息
-			Get_Message({user_id:user.id},function(err, results, fields){
-					if(!err)
-					{
-						if(results.length>0)
-						{
-							var relts=toMessageResults(results);
-							socket.emit(user.key,{data:relts,type:"Messages"});
-						}
-					}
-					else
-					{
-						errMessage("notice","显示没有在线的信息出错!"+err);
-					}
+			Get_Message({user_id:user.id},function(results){
+				if(results.length>0)
+				{
+					var relts=toMessageResults(results);
+					socket.emit(user.key,{data:relts,type:"Messages"});
+				}
 			},"false");
 
 			notice_user(user);  //告诉其它用户
@@ -125,7 +117,7 @@ exports.bll=function(socket,fu)
 	{
 		if(ids.length>0)
 		{
-			updateMessageState(ids);
+			redis.updateMessageState(ids);
 		}
 	}
 
@@ -300,9 +292,6 @@ exports.bll=function(socket,fu)
 	//将发送信息保存
 	this.add_messages=function(data) //--
 	{
-		 var su=null //获取发送的用户资料
-
-		 var u=null  //获取接收用户的资料
 		if(!data.messages)
 		{
 			errMessage("notice","发送信息不能为空!");
@@ -315,17 +304,26 @@ exports.bll=function(socket,fu)
 				{
 						if(results.length>0)
 						{
-							 //stats 标识未读状态
-							 var msg={state:'false',
-												suser_id:results[0].user_id,
-												user_id:results[0].zuser_id,
-												messages:data.messages,
-												sname:results[0].sname,
-												name:results[0].name,create_date:new Date()};
+							//stats 标识未读状态
+							var msg={
+							 	state: 'false',
+								suser_id: results[0].user_id,
+								user_id: results[0].zuser_id,
+								messages: data.messages,
+								sname: results[0].sname,
+								name: results[0].name,
+								create_date: new Date()
+							};
 
-							 // db.insert(msg); // mysqldb
-							 redis.addMessage([msg]);
-							 sendMessage({suser_id:data.suser_id,user_id:data.zuser_id});
+							var callback =  function(msg)
+							{
+								var mg = JSON.parse(msg)
+								sendOnlineUserInfo(data.suser_id,[mg])
+							}
+
+							redis.addMessage(msg,callback);  //添加信息
+							//发送给好友信息
+							sendMessage({suser_id:data.suser_id,user_id:data.zuser_id});
 						}
 				}
 		}
@@ -359,41 +357,39 @@ exports.bll=function(socket,fu)
 	//发送信息
 	function sendMessage(u)
 	{
-		 if(u.user_id != null && u.user_id!=undefined)
-		 {
-					var recv_message=function(err, results, fields)
-					{
-							if(results.length>0)
-							{
-									//{key:"",id:results[0].suser_id},
-									var users=[{key:"",id:results[0].user_id}];
+		if(u.user_id != null && u.user_id!=undefined)
+		{
+			var recv_message=function(results)
+			{
+				if(results.length>0)
+				{
+					sendOnlineUserInfo(results[0].user_id,results);
+				}
+			};
 
-									var queryKeyMemcached=function(us)
-									{
-											var resuInfo=toMessageResults(results);
+			Get_Message(u,recv_message,"false");
+		}
+	}
 
-											fu.io.sockets.socket(us.socket_id).emit(us.key,{data:resuInfo,type:"Messages"});
-											//updateMessagqueryhistroyeState(results);
-											/**if(us.id==u.user_id)
-											{
-													updateMessageState(results);
-											}**/
-									}
-									//如果用户在线把信息发送给它
-									m.queryUserIdOnline(users,errMessage,queryKeyMemcached);
-							}
-					};
+	function sendOnlineUserInfo(user_id,results)
+	{
+		var users=[{key:"",id:user_id}];
 
-				 Get_Message(u,recv_message,"false");
-			}
+		var resuInfo=toMessageResults(results);
+
+		var queryKeyMemcached=function(us)
+		{
+			fu.io.sockets.socket(us.socket_id).emit(us.key,{data:resuInfo,type:"Messages"});
+		}
+		//如果用户在线把信息发送给它
+		m.queryUserIdOnline(users,errMessage,queryKeyMemcached);
 	}
 
 	//获取信息
 	//user:接收用户,send_user:发送用户
 	var Get_Message=function(user,callback,state)
 	{
-			//db.queryMsg({user_id:user.id},callback); //mysqldb
-			redis.query_Messages(user,callback,state);
+		redis.query_Messages(user,callback,state);
 	};
 
 	//更新系统信息状态
@@ -404,12 +400,6 @@ exports.bll=function(socket,fu)
 			db.updateMessage(info.id,info.suser_id); //mysqldb
 		}
 	}
-
-	//更新聊天状态
-	function updateMessageState(results)
-	{
-		redis.updateMessageState(results);
-	};
 
 
 	//通知用户上线
