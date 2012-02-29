@@ -85,7 +85,7 @@ function GlobalCallback(err,results,name,callback)
 
 function show_redis_error(name,err)
 {
-    console.log("-----------"+ name +"--Function---error:"+err);
+    console.log("-------Redis--------"+ name +"--Function---error:"+err);
 }
 
 //初始化表ID

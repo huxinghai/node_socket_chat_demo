@@ -1,4 +1,4 @@
-var mc=require("memcached"),
+/**var mc=require("memcached"),
 		config=require("./config").memcached;
 
 var m=new mc(config.host);
@@ -191,4 +191,4 @@ function callbackGetUserByKey(err,results,callback,user)
 				 }
 		 }
 }
-
+**/

@@ -1,3 +1,4 @@
+/**
 var redis=require("redis"),
     config=require("./config").redis;
 
@@ -50,10 +51,10 @@ function init()
 init();
 
 //添加信息
-/**exports.addMessage=function(Msgs)
-{
-   AddTable(tb.messages,Msgs,"login")
-}**/
+//exports.addMessage=function(Msgs)
+//{
+//  AddTable(tb.messages,Msgs,"login")
+//}
 
 //查询历史聊天记录
 exports.queryhistroyAll=function(data,callback)
@@ -310,4 +311,5 @@ function initMessageId(table_name)
         }
     })
 }
+**/
 

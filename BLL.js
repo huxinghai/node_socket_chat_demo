@@ -1,19 +1,18 @@
 var   db =require("./mysql")
-		, m=require("./BLLMemcache")
+		, mc=require("./memcache_user")
 		, redis=require("./redis_message_bll");
 
 
 //功能逻辑
 exports.bll=function(socket,fu)
-{
+{	
 	this.connection=function(data)
 	{
 		var user_key=data.key;
 		//获取memcached key 值
-		m.get_user_by_key(user_key,function(err,data){
+		m.get_user_by_key(user_key,function(data){
 
 			var user=JSON.parse(data);
-
 			if(user==null || user==undefined || user==false)
 			{
 				errMessage("error","用户没有登陆，请重新登陆！");
@@ -158,18 +157,16 @@ exports.bll=function(socket,fu)
 	function inspectorIsLine(key)
 	{
 		//获取memached key的信息
-		m.get_user_by_key(key,function(err,data){
-			console.log(data);
-			if( !err || data)
+		m.get_user_by_key(key,function(data){
+			if(data)
 			{
 				var user=JSON.parse(data);
 
-				if(user==undefined || user==null){ return; }
-			
+				if(user==undefined || user==null){ return; }			
 				if(user.is_online=="false")
 				{
 					//删除memached的key
-					m.deleteMemcacheBykey(key,function(err,data){
+					m.deleteMemcacheBykey(key,function(data){
 						if(data)
 						{
 							notice_user(user);        //告诉其它用户
@@ -185,19 +182,16 @@ exports.bll=function(socket,fu)
 	{
 			if(data==null || data=="")
 			{
-					console.log("no search vlaue");
-					return;
+				console.log("no search vlaue");
+				return;
 			}
 
-			var callback=function(err,results)
-			{
-					if(!err)
-					{
-							socket.emit("Friends",results);
-					}
-			}
-
-			db.queryUser(data,callback);
+			db.queryUser(data,function(err,results){
+				if(!err)
+				{
+					socket.emit("Friends",results);
+				}
+			});
 	}
 
 	//通知上线与下线用户
@@ -226,42 +220,34 @@ exports.bll=function(socket,fu)
 
 		var callback=function(err,results)
 		{
-				if(!err)
+			if(!err)
+			{
+				if(results.length<=0)
 				{
-						if(results.length<=0)
-						{
-								db.add_friends(data);
+					db.add_friends(data);
 
-								var callbackquery=function(err,results)
-								{
-										if(!err)
-										{                            
-												if(results.length>0)
-												{                            
-														var _user={id:results[0].user_id,key:null};
+					var callbackquery=function(err,results)
+					{
+						if(!err)
+						{                            
+							if(results.length>0)
+							{                            
+								var _user={id:results[0].user_id,key:null};
+								m.queryUserIdOnline(_user,function(u){
+									//先把好友资料发送到客户端    
+									fu.io.sockets.socket(u.socket_id).emit("alluser",results);
 
-														var callbackNotice=function(u)
-														{
-																
-																//先把好友资料发送到客户端    
-																fu.io.sockets.socket(u.socket_id).emit("alluser",results);
-
-																var tuser={id:results[0].zuser_id,key:null}                                    
-
-																//当前的好友是否在线
-																var callbackOnline=function(use)
-																{
-																		fu.io.sockets.socket(u.socket_id).emit("alluser",[use]);
-																}
-																m.queryUserIdOnline([tuser],errMessage,callbackOnline); //查看用户是否在线  
-														}
-														m.queryUserIdOnline([_user],errMessage,callbackNotice);//如果用户在线把好友发送给客户端
-												}
-										}
-								}
-								db.queryFriendsFirst(data,callbackquery);  //查询好友信息
+									var tuser={id:results[0].zuser_id,key:null}
+									m.queryUserIdOnline(tuser,function(use){
+										fu.io.sockets.socket(u.socket_id).emit("alluser",[use]);
+									}); //查看用户是否在线 
+								});//如果用户在线把好友发送给客户端
+							}
 						}
+					}
+					db.queryFriendsFirst(data,callbackquery);  //查询好友信息
 				}
+			}
 		}
 		db.queryFriendsFirst(data,callback); //判断是否存在好友
 	};
@@ -271,20 +257,17 @@ exports.bll=function(socket,fu)
 	{
 		var callback=function(err,results)
 		{
-				if(!err)
+			if(!err)
+			{
+				if(results.length>0)
 				{
-						if(results.length>0)
-						{
-								var users=[{key:'',id:user_id}]
-								var callbackMemcached=function(u)
-								{
-										fu.io.sockets.socket(u.socket_id).emit(u.key,{data:results,type:"Friends"});
-
-								}
-								//如果用户在线把信息发送给它
-								m.queryUserIdOnline(users,errMessage,callbackMemcached);
-						}
+					var user={key:'',id:user_id}
+					//如果用户在线把信息发送给它
+					m.queryUserIdOnline(user,function(u){
+						fu.io.sockets.socket(u.socket_id).emit(u.key,{data:results,type:"Friends"});
+					});
 				}
+			}
 		}
 		db.noticeFriends(user_id,callback);
 	}
@@ -336,7 +319,7 @@ exports.bll=function(socket,fu)
 	var islinUserbyId=function(user)
 	{
 		//判断是否已经登陆
-		m.queryMemcachedbyKeyifUserId(user,errMessage);
+		m.queryMemcachedbyKeyifUserId(user);
 	};
 
 
@@ -373,16 +356,14 @@ exports.bll=function(socket,fu)
 
 	function sendOnlineUserInfo(user_id,results)
 	{
-		var users=[{key:"",id:user_id}];
+		var user={key:"",id:user_id};
 
 		var resuInfo=toMessageResults(results);
 
-		var queryKeyMemcached=function(us)
-		{
-			fu.io.sockets.socket(us.socket_id).emit(us.key,{data:resuInfo,type:"Messages"});
-		}
 		//如果用户在线把信息发送给它
-		m.queryUserIdOnline(users,errMessage,queryKeyMemcached);
+		m.queryUserIdOnline(user,function(us){
+			fu.io.sockets.socket(us.socket_id).emit(us.key,{data:resuInfo,type:"Messages"});
+		});
 	}
 
 	//获取信息
@@ -412,17 +393,15 @@ exports.bll=function(socket,fu)
 
 			if(!err)
 			{
-					m.queryUserIdOnline(results,errMessage,function(u){
-						 console.log("query friends u----------");
-						 console.log(u);
-						 console.log("query friends user------");
-						 console.log(user);
-
-							//上线好友告诉自己
-						 socket.emit("alluser",[u]);
-						 //告诉好友自己上线
-						 fu.io.sockets.socket(u.socket_id).emit("alluser",[user]);
+				for(var i=0;i<results.length;i++)
+				{
+					m.queryUserIdOnline(results[i],function(u){
+						//上线好友告诉自己
+						socket.emit("alluser",[u]);
+						//告诉好友自己上线
+						fu.io.sockets.socket(u.socket_id).emit("alluser",[user]);
 					})
+				}
 			}
 		};
 
@@ -440,7 +419,9 @@ exports.bll=function(socket,fu)
 		s.emit("error",{type:_type,messages:_messages});
 	}
 
+	var m = new mc.memcached(errMessage);
+
 	//清除上次的memcache
-	m.delOfflineUserb(errMessage,notice_user);
+	m.delOfflineUser(notice_user);
 }
 
