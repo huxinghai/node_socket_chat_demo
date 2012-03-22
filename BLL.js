@@ -186,11 +186,8 @@ exports.bll=function(socket,fu)
 				return;
 			}
 
-			db.queryUser(data,function(err,results){
-				if(!err)
-				{
-					socket.emit("Friends",results);
-				}
+			db.queryUser(data,function(results){
+				socket.emit("Friends",results);
 			});
 	}
 
@@ -217,59 +214,43 @@ exports.bll=function(socket,fu)
 	//同意加入好友
 	this.agreeFriends=function(data) //--
 	{
-
-		var callback=function(err,results)
-		{
-			if(!err)
+		db.queryFriendsFirst(data,function(results){
+			if(results.length<=0)
 			{
-				if(results.length<=0)
-				{
-					db.add_friends(data);
+				db.add_friends(data);
+				db.queryFriendsFirst(data,function(results){
+					if(results.length>0)
+					{                            
+						var _user={id:results[0].user_id,key:null};
+						m.queryUserIdOnline(_user,function(u){
+							//先把好友资料发送到客户端    
+							fu.io.sockets.socket(u.socket_id).emit("alluser",results);
 
-					var callbackquery=function(err,results)
-					{
-						if(!err)
-						{                            
-							if(results.length>0)
-							{                            
-								var _user={id:results[0].user_id,key:null};
-								m.queryUserIdOnline(_user,function(u){
-									//先把好友资料发送到客户端    
-									fu.io.sockets.socket(u.socket_id).emit("alluser",results);
+							var tuser={id:results[0].zuser_id,key:null}
+							m.queryUserIdOnline(tuser,function(use){
+								fu.io.sockets.socket(u.socket_id).emit("alluser",[use]);
+							}); //查看用户是否在线 
 
-									var tuser={id:results[0].zuser_id,key:null}
-									m.queryUserIdOnline(tuser,function(use){
-										fu.io.sockets.socket(u.socket_id).emit("alluser",[use]);
-									}); //查看用户是否在线 
-								});//如果用户在线把好友发送给客户端
-							}
-						}
+						});//如果用户在线把好友发送给客户端
 					}
-					db.queryFriendsFirst(data,callbackquery);  //查询好友信息
-				}
+				});  //查询好友信息				
 			}
-		}
-		db.queryFriendsFirst(data,callback); //判断是否存在好友
+		}); //判断是否存在好友
 	};
 
 	//获取通知信息
 	function getNoticeMessage(user_id)
 	{
-		var callback=function(err,results)
-		{
-			if(!err)
+		db.noticeFriends(user_id,function(results){
+			if(results.length>0)
 			{
-				if(results.length>0)
-				{
-					var user={key:'',id:user_id}
-					//如果用户在线把信息发送给它
-					m.queryUserIdOnline(user,function(u){
-						fu.io.sockets.socket(u.socket_id).emit(u.key,{data:results,type:"Friends"});
-					});
-				}
+				var user={key:'',id:user_id}
+				//如果用户在线把信息发送给它
+				m.queryUserIdOnline(user,function(u){
+					fu.io.sockets.socket(u.socket_id).emit(u.key,{data:results,type:"Friends"});
+				});
 			}
-		}
-		db.noticeFriends(user_id,callback);
+		});
 	}
 
 	//将发送信息保存
@@ -281,38 +262,30 @@ exports.bll=function(socket,fu)
 			return;
 		} 
 
-		var addCallback=function(err, results, fields)
-		{
-				if(!err)
-				{
-						if(results.length>0)
-						{
-							//stats 标识未读状态
-							var msg={
-							 	state: 'false',
-								suser_id: results[0].user_id,
-								user_id: results[0].zuser_id,
-								messages: data.messages,
-								sname: results[0].sname,
-								name: results[0].name,
-								create_date: new Date()
-							};
-
-							var callback =  function(msg)
-							{
-								var mg = JSON.parse(msg)
-								sendOnlineUserInfo(data.suser_id,[mg])
-							}
-
-							redis.addMessage(msg,callback);  //添加信息
-							//发送给好友信息
-							sendMessage({suser_id:data.suser_id,user_id:data.zuser_id});
-						}
-				}
-		}
-
 		//查询好友
-		db.existfirends(data,addCallback); // mysqldb
+		db.existfirends(data,function(results){
+			if(results.length>0)
+			{
+				//stats 标识未读状态
+				var msg={
+				 	state: 'false',
+					suser_id: results[0].user_id,
+					user_id: results[0].zuser_id,
+					messages: data.messages,
+					sname: results[0].sname,
+					name: results[0].name,
+					create_date: new Date()
+				};
+
+				redis.addMessage(msg,function(msg){
+					var mg = JSON.parse(msg)
+					sendOnlineUserInfo(data.suser_id,[mg])
+				}); //添加信息
+
+				//发送给好友信息
+				sendMessage({suser_id:data.suser_id,user_id:data.zuser_id});
+			}
+		});
 	};
 
 	//判断用户是否在线
@@ -386,26 +359,18 @@ exports.bll=function(socket,fu)
 	//通知用户上线
 	function notice_user_online(user)
 	{
-		var callback=function(err, results, fields)
-		{
-			console.log("query friends----------");
-			console.log(results);
 
-			if(!err)
+		db.query_friends(user.id,function(results){
+			for(var i=0;i<results.length;i++)
 			{
-				for(var i=0;i<results.length;i++)
-				{
-					m.queryUserIdOnline(results[i],function(u){
-						//上线好友告诉自己
-						socket.emit("alluser",[u]);
-						//告诉好友自己上线
-						fu.io.sockets.socket(u.socket_id).emit("alluser",[user]);
-					})
-				}
+				m.queryUserIdOnline(results[i],function(u){
+					//上线好友告诉自己
+					socket.emit("alluser",[u]);
+					//告诉好友自己上线
+					fu.io.sockets.socket(u.socket_id).emit("alluser",[user]);
+				})
 			}
-		};
-
-		db.query_friends(user.id,callback)
+		});		
 	};
 
 	//错误与提示信息

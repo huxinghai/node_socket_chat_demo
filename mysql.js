@@ -3,24 +3,26 @@ var mysql=require('mysql'),
 
 var client=mysql.createClient(config);
 
-client.query("USE neza_development")
+client.query("USE "+client.database);
 
 //查询
 var query=function(sql,fn)
-{
-    client.query(sql,fn);
+{    
+    client.query(sql,function(err,results){
+        if(!err)
+        {
+            fn(results);
+        }else
+        {
+            console.log("----mysql----error--"+err)
+        }
+    });
 };
 
 exports.queryUser=function(sh,callback)
 {
     query("select *from users where login like '%"+sh.login+"%' and id<>"+ sh.suser_id +" and not id in (select zuser_id from friends where user_id="+ sh.suser_id +")",callback);
 }
-
-//查询历史信息
-/**exports.queryhistry=function(user_id,suser_id,callback_fn)
-{
-    query("select *from messages where state='true' and ((suser_id="+ user_id +" and user_id="+ suser_id +") or (suser_id="+ suser_id +" and user_id="+ user_id +")) ",callback_fn);
-};**/
 
 //查询发送的信息
 exports.queryMsg=function(u,callback)

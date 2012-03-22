@@ -2,7 +2,8 @@
 exports.mysql={
 	host:"localhost",
 	user:"root",
-	password:""
+	password:"",
+	database:"neza_development" 
 }
 
 exports.memcached={
