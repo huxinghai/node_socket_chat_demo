@@ -1,0 +1,60 @@
+ul#messages{
+  list-style: none;
+  padding: 0px;
+  width: 500px;
+  height: 300px;
+  border: 1px solid gray;
+  overflow: auto;
+  font-size: 12px;
+  margin: 0px;
+}
+
+ul#messages li{
+  margin: 2px 5px;
+  padding: 0;
+}
+
+ul#messages li .date{
+  float: right;
+  color: #777;
+  font-size: 11px;
+  padding-left: 4px;
+  padding-top: 2px;
+}
+
+ul#messages li .message{
+  color: red;
+}
+
+ul#messages li .login{
+  color: red;
+  margin-right: 10px;
+}
+
+ul#messages li .content{
+  margin-right: 10px;
+}
+
+.chat_panel{
+  display: none;
+}
+
+.online_user{
+  float: left;
+  margin-right: 20px;
+  height: 330px;
+}
+
+.message_panel{
+  float: left;
+}
+
+.current_user{
+  color: red;
+}
+
+.user_list{
+  list-style: none;
+  margin: 5px;
+  padding: 0px;
+}
