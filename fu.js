@@ -1,73 +1,69 @@
 var app = require('http').createServer(handlerRequest)
-    , fs=require("fs")
-    , url=require("url")
-    , path=require("path")
+    , fs = require("fs")
+    , url = require("url")
+    , path = require("path")
     , io = require('socket.io').listen(app)
-    , part=9090
-    , host="192.168.2.139"
+    , part = 9090
+    , host = "192.168.2.167"
 
 
-exports.io=io
+exports.io = io
 
 
-app.listen(part,host);
+app.listen(part, host);
 
-console.log("http://"+host+":"+part)
+console.log("http://"+ host +":"+ part)
 
 //请求回调函数
-function handlerRequest(req,res)
-{
-     //如果route没有匹配到，则当作静态文件处理
-     staticFileServer(req, res);
+function handlerRequest(req,res){
+  //如果route没有匹配到，则当作静态文件处理
+  staticFileServer(req, res);
 }
 
 //静态文件处理
-var staticFileServer=function(req,res)
-{
-    var filename=url.parse(req.url).pathname;
-    filename=filename=="/" ? "index.html":filename;
+var staticFileServer=function(req,res){
+  var filename=url.parse(req.url).pathname;
+  filename=filename=="/" ? "index.html":filename;
 
-    //判断如果没有路径，合并一个路径
-    var filePath = path.join(__dirname,filename);
+  //判断如果没有路径，合并一个路径
+  var filePath = path.join(__dirname,filename);
 
-    //判断路径是否存在
-    path.exists(filePath, function(exists) {
+  //判断路径是否存在
+  path.exists(filePath, function(exists) {
 
-        if(!exists) {
-            handler404(req, res);
-            return;
-        }
+    if(!exists) {
+      handler404(req, res);
+      return;
+    }
 
-        //读取路径文件
-        fs.readFile(filePath, "binary", function(err, file) {
-            if(err) {
-                handler500(req, res, err);
-                return;
-            }
+    //读取路径文件
+    fs.readFile(filePath, "binary", function(err, file) {
+      if(err) {
+        handler500(req, res, err);
+        return;
+      }
 
-            //获取名称
-            var ext = path.extname(filePath);
+      //获取名称
+      var ext = path.extname(filePath);
 
-            ext = ext ? ext.slice(1) : 'html';
-            res.writeHead(200, {'Content-Type': contentTypes[ext] || 'text/html'});
-            res.write(file, "binary");
-            res.end();
-        });
+      ext = ext ? ext.slice(1) : 'html';
+      res.writeHead(200, {'Content-Type': contentTypes[ext] || 'text/html'});
+      res.write(file, "binary");
+      res.end();
     });
+  });
 }
 
 //404错误回调
-var handler404=function(req,res)
-{
-    res.writeHead(404,{'Content-Type':"text-plain"});
-    res.end("Page NOT Found");
+var handler404=function(req,res){
+  res.writeHead(404,{'Content-Type':"text-plain"});
+  res.end("Page NOT Found");
 }
 
 //500错误回调
-var handler500=function(req,res,err)
-{
-    res.writeHead(500,{'Content-Type':'text-plain'});
-    res.end(err);
+var handler500=function(req,res,err){
+  res.writeHead(500,{'Content-Type':'text-plain'});
+  res.end(err);
 }
 
 
